@@ -57,7 +57,7 @@ for i in "${!DEP_FILES[@]}"; do
     url="${DEP_URLS[$i]}"
     if [ ! -f "$file" ]; then
         echo "Downloading $file..."
-        wget -q --show-progress "$url" || {
+        wget -q --show-progress --retry-connrefused --waitretry=5 -t 3 "$url" || {
             echo "Failed to download $file"
             exit 1
         }

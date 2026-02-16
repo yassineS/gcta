@@ -42,7 +42,7 @@ echo -e "${GREEN}✓ MKL location: $MKLROOT${NC}"
 
 # Install other build tools if needed
 echo -e "${BLUE}Checking build tools...${NC}"
-brew install gcc boost > /dev/null 2>&1 || true
+brew install gcc gfortran boost > /dev/null 2>&1 || true
 
 mkdir -p "$GCTA_BUILD_ROOT/dependencies"
 cd "$GCTA_BUILD_ROOT/dependencies"
@@ -73,7 +73,7 @@ for i in "${!DEP_FILES[@]}"; do
     url="${DEP_URLS[$i]}"
     if [ ! -f "$file" ]; then
         echo "Downloading $file..."
-        curl -L -o "$file" "$url" || {
+        curl --retry 3 --retry-delay 5 -L -o "$file" "$url" || {
             echo "Failed to download $file"
             exit 1
         }

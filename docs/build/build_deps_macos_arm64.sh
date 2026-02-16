@@ -50,7 +50,7 @@ fi
 # Note: Intel MKL support for Apple Silicon is limited
 # Using OpenBLAS instead
 echo -e "${BLUE}Installing build tools via Homebrew...${NC}"
-brew install gcc > /dev/null 2>&1 || true
+brew install gcc gfortran > /dev/null 2>&1 || true
 
 mkdir -p "$GCTA_BUILD_ROOT/dependencies"
 cd "$GCTA_BUILD_ROOT/dependencies"
@@ -83,7 +83,7 @@ for i in "${!DEP_FILES[@]}"; do
     url="${DEP_URLS[$i]}"
     if [ ! -f "$file" ]; then
         echo "Downloading $file..."
-        curl -L -o "$file" "$url" || {
+        curl --retry 3 --retry-delay 5 -L -o "$file" "$url" || {
             echo "Failed to download $file"
             exit 1
         }
