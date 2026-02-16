@@ -22,28 +22,6 @@ on:
           - macos-arm64
 
 jobs:
-  build-all:
-    name: Build All Platforms
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Trigger all builds
-        run: |
-          echo "Triggering build workflows..."
-          
-          # For push events, workflows trigger automatically
-          # For manual dispatch, we need to trigger them
-          
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual trigger detected. Individual workflows will handle their builds."
-            echo "Selected build type: ${{ github.event.inputs.build_type }}"
-          else
-            echo "Push event detected. All workflows will trigger automatically based on branches/tags."
-          fi
-
   call-build-linux-x86_64:
     name: Linux x86_64 Build
     if: |
@@ -83,7 +61,7 @@ jobs:
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [build-all]
+    needs: [call-build-linux-x86_64, call-build-linux-arm64, call-build-macos-intel, call-build-macos-arm64]
     if: always()
 
     steps:

@@ -18,6 +18,9 @@ on:
         description: 'Upload build artifacts'
         required: false
         default: 'true'
+  workflow_call:
+    secrets:
+      inherit
 
 jobs:
   build:
