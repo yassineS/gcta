@@ -94,10 +94,10 @@ echo -e "${GREEN}✓ Eigen path set${NC}"
 
 # Build Spectra (header-only)
 echo -e "${BLUE}Setting up Spectra...${NC}"
-if [ ! -d "spectra-1.0.0" ]; then
-    tar -xzf spectra-1.0.0.tar.gz
+if [ ! -d "spectra-v1.2.0" ]; then
+    tar -xzf spectra-1.2.0.tar.gz
 fi
-export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-1.0.0/include
+export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-v1.2.0/include
 echo -e "${GREEN}✓ Spectra path set${NC}"
 
 # Build Boost

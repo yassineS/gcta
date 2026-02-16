@@ -42,7 +42,7 @@ echo -e "${GREEN}✓ MKL location: $MKLROOT${NC}"
 
 # Install other build tools if needed
 echo -e "${BLUE}Checking build tools...${NC}"
-brew install gcc gfortran boost > /dev/null 2>&1 || true
+brew install gcc boost > /dev/null 2>&1 || true
 
 mkdir -p "$GCTA_BUILD_ROOT/dependencies"
 cd "$GCTA_BUILD_ROOT/dependencies"
@@ -92,10 +92,10 @@ echo -e "${GREEN}✓ Eigen set${NC}"
 
 # Spectra (header-only)
 echo -e "${BLUE}Setting up Spectra...${NC}"
-if [ ! -d "spectra-1.0.0" ]; then
-    tar -xzf spectra-1.0.0.tar.gz
+if [ ! -d "spectra-v1.2.0" ]; then
+    tar -xzf spectra-1.2.0.tar.gz
 fi
-export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-1.0.0/include
+export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-v1.2.0/include
 echo -e "${GREEN}✓ Spectra set${NC}"
 
 # Boost

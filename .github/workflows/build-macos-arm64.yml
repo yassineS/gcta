@@ -63,7 +63,7 @@ jobs:
           export GCTA_BUILD_ROOT="${{ env.BUILD_ROOT }}"
           export OPENBLAS=${{ env.BUILD_ROOT }}/openblas_arm64_pkg
           export EIGEN3_INCLUDE_DIR=${{ env.BUILD_ROOT }}/dependencies/eigen-3.3.7
-          export SPECTRA_LIB=${{ env.BUILD_ROOT }}/dependencies/spectra-1.0.0/include
+          export SPECTRA_LIB=${{ env.BUILD_ROOT }}/dependencies/spectra-v1.2.0/include
           export BOOST_LIB=${{ env.BUILD_ROOT }}/boost_pkg_arm64/include
           
           chmod +x ./docs/build/build_gcta_macos_arm64.sh

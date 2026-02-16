@@ -31,7 +31,7 @@ make install
 
 cd $rootdir/gcta_dep
 tar -zxf Spectra_v1.0.0.tar.gz
-cd spectra-1.0.0/
+cd spectra-v1.2.0/
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=$rootdir/spectra_pkg ..

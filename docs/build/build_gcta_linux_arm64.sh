@@ -36,7 +36,7 @@ fi
 # Set environment variables
 export OPENBLAS=$GCTA_BUILD_ROOT/openblas_pkg
 export EIGEN3_INCLUDE_DIR=$GCTA_BUILD_ROOT/dependencies/eigen-3.3.7
-export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-1.0.0/include
+export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-v1.2.0/include
 export BOOST_LIB=$GCTA_BUILD_ROOT/boost_pkg/include
 
 export LIBRARY_PATH=$GCTA_BUILD_ROOT/zlib_pkg/lib:$GCTA_BUILD_ROOT/zstd_pkg/lib:$GCTA_BUILD_ROOT/gsl_pkg/lib:$GCTA_BUILD_ROOT/sqlite_pkg/lib:$LIBRARY_PATH

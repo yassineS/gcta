@@ -79,7 +79,7 @@ jobs:
           export GCTA_BUILD_ROOT="${{ env.BUILD_ROOT }}"
           export MKLROOT="${{ env.MKLROOT }}"
           export EIGEN3_INCLUDE_DIR=${{ env.BUILD_ROOT }}/dependencies/eigen-3.3.7
-          export SPECTRA_LIB=${{ env.BUILD_ROOT }}/dependencies/spectra-1.0.0/include
+          export SPECTRA_LIB=${{ env.BUILD_ROOT }}/dependencies/spectra-v1.2.0/include
           export BOOST_LIB=${{ env.BUILD_ROOT }}/boost_pkg/include
           
           chmod +x ./docs/build/build_gcta_linux_x86_64.sh

@@ -50,7 +50,15 @@ fi
 # Note: Intel MKL support for Apple Silicon is limited
 # Using OpenBLAS instead
 echo -e "${BLUE}Installing build tools via Homebrew...${NC}"
-brew install gcc gfortran > /dev/null 2>&1 || true
+brew install gcc > /dev/null 2>&1 || true
+
+# Ensure gfortran is available (may be installed as gfortran-XX)
+if ! command -v gfortran &> /dev/null; then
+    GFORTRAN_VERSION=$(brew list gcc | grep -o 'gfortran-[0-9]*' | head -1 | sed 's/gfortran-//')
+    if [ -n "$GFORTRAN_VERSION" ]; then
+        ln -sf "$(brew --prefix gcc)/bin/gfortran-$GFORTRAN_VERSION" /usr/local/bin/gfortran
+    fi
+fi
 
 mkdir -p "$GCTA_BUILD_ROOT/dependencies"
 cd "$GCTA_BUILD_ROOT/dependencies"
@@ -121,10 +129,10 @@ echo -e "${GREEN}✓ Eigen set${NC}"
 
 # Spectra (header-only)
 echo -e "${BLUE}Setting up Spectra...${NC}"
-if [ ! -d "spectra-1.0.0" ]; then
-    tar -xzf spectra-1.0.0.tar.gz
+if [ ! -d "spectra-v1.2.0" ]; then
+    tar -xzf spectra-1.2.0.tar.gz
 fi
-export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-1.0.0/include
+export SPECTRA_LIB=$GCTA_BUILD_ROOT/dependencies/spectra-v1.2.0/include
 echo -e "${GREEN}✓ Spectra set${NC}"
 
 # Boost
