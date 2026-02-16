@@ -54,7 +54,7 @@ declare -A DEPS=(
     ["zlib-1.3.1.tar.gz"]="https://zlib.net/zlib-1.3.1.tar.gz"
     ["zstd-1.5.0.tar.gz"]="https://github.com/facebook/zstd/releases/download/v1.5.0/zstd-1.5.0.tar.gz"
     ["gsl-2.7.tar.gz"]="https://ftpmirror.gnu.org/gsl/gsl-2.7.tar.gz"
-    ["sqlite-autoconf-3400000.tar.gz"]="https://www.sqlite.org/2023/sqlite-autoconf-3400000.tar.gz"
+    ["sqlite-autoconf-3510200.tar.gz"]="https://www.sqlite.org/2026/sqlite-autoconf-3510200.tar.gz"
 )
 
 echo -e "${BLUE}Downloading dependencies...${NC}"
@@ -157,10 +157,10 @@ cd ..
 
 # sqlite3
 echo -e "${BLUE}Building SQLite3...${NC}"
-if [ ! -d "sqlite-autoconf-3400000" ]; then
-    tar -xzf sqlite-autoconf-3400000.tar.gz
+if [ ! -d "sqlite-autoconf-3510200" ]; then
+    tar -xzf sqlite-autoconf-3510200.tar.gz
 fi
-cd sqlite-autoconf-3400000
+cd sqlite-autoconf-3510200
 if [ ! -f "$GCTA_BUILD_ROOT/sqlite_pkg/lib/libsqlite3.a" ]; then
     ./configure --prefix=$GCTA_BUILD_ROOT/sqlite_pkg --disable-shared --enable-static > /dev/null
     make > /dev/null
