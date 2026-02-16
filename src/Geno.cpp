@@ -6,6 +6,7 @@
    Depends on the class of marker and phenotype
 
    Developed by Zhili Zheng<zhilizheng@outlook.com>
+   
 
    This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -944,31 +945,34 @@ void Geno::getGenoDouble_bed(uintptr_t *buf, int idx, GenoBufItem* gbuf){
                     if(bGenoStd){
                         rdev = sqrt(1.0 / sd);
                     }
-                    double aa0 = 0.0, aa2 = 2.0;
+                    // RECESSIVE MODEL: 0 (ref/ref), 0 (ref/alt), 1 (alt/alt)
+                    double aa0 = 0.0, aa1_recessive = 0.0, aa2 = 1.0;
                     if(isEffRev){
                         double temp = aa0;
                         aa0 = aa2;
-                        aa2 = aa0;
+                        aa2 = temp;
                     }
 
                     a0 = (aa0 - center_value) * rdev;
-                    a1 = (1.0 - center_value) * rdev;
-                    a2 = (aa2 - center_value) * rdev;
+                    a1 = (aa1_recessive - center_value) * rdev;  // Heterozygote coded as 0
+                    a2 = (aa2 - center_value) * rdev;  // Homozygote alt coded as 1
                     na = (mu - center_value) * rdev;
                }else{
+                   // RECESSIVE MODEL for dominant GRM mode
                    double psq = 0.5 * mu * mu;
                    if(bGenoCenter)center_value = psq; // psq
                    if(bGenoStd){
                        rdev = 1.0 / sd;
                    }
-                   double aa0 = 0.0, aa2 = 2.0 * mu - 2.0;
+                   // For recessive: aa0 = 0, aa2 = 1 (or adjusted for dominant mode)
+                   double aa0 = 0.0, aa2 = 1.0 * mu;  // Adjusted for dominant mode
                    if(isEffRev){
                        double temp = aa0;
                        aa0 = aa2;
                        aa2 = temp;
                    }
                    a0 = (aa0 - center_value) * rdev;
-                   a1 = (mu - center_value) * rdev;
+                   a1 = (0.0 - center_value) * rdev;  // Heterozygote coded as 0
                    a2 = (aa2 - center_value) * rdev;
                    na = (psq - center_value)*rdev;
                 }
