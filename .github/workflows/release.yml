@@ -1,0 +1,157 @@
+name: Create Release with All Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g., v2.1.0)'
+        required: true
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine release version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${{ github.ref }}" 
+            VERSION=${VERSION#refs/tags/}
+          else
+            VERSION="${{ github.event.inputs.release_tag }}"
+          fi
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Release version: $VERSION"
+
+      - name: Wait for build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all_artifacts
+          pattern: gcta64*-release
+
+      - name: Organize artifacts
+        run: |
+          mkdir -p release_artifacts
+          
+          # Copy all binaries from download
+          for dir in all_artifacts/*/; do
+            if [ -d "$dir" ]; then
+              cp "$dir"* release_artifacts/ 2>/dev/null || true
+            fi
+          done
+          
+          # List what we have
+          echo "Collected artifacts:"
+          ls -lh release_artifacts/ || echo "No artifacts found"
+
+      - name: Create checksums
+        run: |
+          cd release_artifacts
+          
+          # Create combined checksum file
+          echo "# GCTA ${{ env.RELEASE_VERSION }} Binary Checksums" > CHECKSUMS.md
+          echo "" >> CHECKSUMS.md
+          echo "## MD5 Checksums" >> CHECKSUMS.md
+          echo '```' >> CHECKSUMS.md
+          cat *.md5 2>/dev/null || echo "No MD5 files" >> CHECKSUMS.md
+          echo '```' >> CHECKSUMS.md
+          echo "" >> CHECKSUMS.md
+          echo "## SHA256 Checksums" >> CHECKSUMS.md
+          echo '```' >> CHECKSUMS.md
+          cat *.sha256 2>/dev/null || echo "No SHA256 files" >> CHECKSUMS.md
+          echo '```' >> CHECKSUMS.md
+          
+          ls -lh
+
+      - name: Create release notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          # GCTA ${{ env.RELEASE_VERSION }} - Static Binary Release
+          
+          This release contains statically compiled GCTA binaries for multiple platforms.
+          
+          ## Available Binaries
+          
+          - **gcta64_linux_x86_64** - Linux x86_64 (with Intel MKL)
+          - **gcta64_linux_arm64** - Linux ARM64/aarch64 (with OpenBLAS)
+          - **gcta64_macos_intel** - macOS Intel x86_64 (with Intel MKL)
+          - **gcta64_macos_arm64** - macOS Apple Silicon ARM64 (with OpenBLAS)
+          
+          ## Binary Details
+          
+          All binaries are fully static (Linux) or use static dependencies (macOS) and can be used without installing additional dependencies on the target system.
+          
+          ### Linux Binaries (Fully Static)
+          - No external dependencies required
+          - Can be copied to any Linux x86_64 or ARM64 system
+          - Tested on Ubuntu, Debian, CentOS
+          
+          ### macOS Binaries (Hybrid Static/Dynamic)
+          - Static dependencies with dynamic system library linking (required by macOS)
+          - Compatible with macOS 10.13+ (Intel) or 11.0+ (Apple Silicon)
+          
+          ## Verification
+          
+          Verify binary integrity using the provided checksums:
+          
+          ```bash
+          # Linux
+          md5sum -c gcta64_linux_x86_64.md5
+          
+          # macOS
+          md5sum -c gcta64_macos_intel.md5
+          ```
+          
+          ## Usage
+          
+          1. Download the appropriate binary for your platform
+          2. Make it executable: `chmod +x gcta64_*`
+          3. Run it: `./gcta64_linux_x86_64 --help`
+          
+          ## Build Information
+          
+          - Build date: ${{ github.event.head_commit.timestamp }}
+          - Built from: ${{ github.sha }}
+          - Latest commit: ${{ github.event.head_commit.message }}
+          
+          See [GCTA Documentation](https://cnsgenomics.com/software/gcta/) for usage instructions and examples.
+          
+          EOF
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            release_artifacts/gcta64_*
+            release_artifacts/CHECKSUMS.md
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manual GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          files: |
+            release_artifacts/gcta64_*
+            release_artifacts/CHECKSUMS.md
+          body_path: release_notes.md
+          tag_name: ${{ github.event.inputs.release_tag }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

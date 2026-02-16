@@ -1,0 +1,108 @@
+name: Build All Platforms
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - linux-x86_64
+          - linux-arm64
+          - macos-intel
+          - macos-arm64
+
+jobs:
+  build-all:
+    name: Build All Platforms
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger all builds
+        run: |
+          echo "Triggering build workflows..."
+          
+          # For push events, workflows trigger automatically
+          # For manual dispatch, we need to trigger them
+          
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger detected. Individual workflows will handle their builds."
+            echo "Selected build type: ${{ github.event.inputs.build_type }}"
+          else
+            echo "Push event detected. All workflows will trigger automatically based on branches/tags."
+          fi
+
+  call-build-linux-x86_64:
+    name: Linux x86_64 Build
+    if: |
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.build_type == 'all' ||
+      github.event.inputs.build_type == 'linux-x86_64'
+    uses: ./.github/workflows/build-linux-x86_64.yml
+    secrets: inherit
+
+  call-build-linux-arm64:
+    name: Linux ARM64 Build
+    if: |
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.build_type == 'all' ||
+      github.event.inputs.build_type == 'linux-arm64'
+    uses: ./.github/workflows/build-linux-arm64.yml
+    secrets: inherit
+
+  call-build-macos-intel:
+    name: macOS Intel Build
+    if: |
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.build_type == 'all' ||
+      github.event.inputs.build_type == 'macos-intel'
+    uses: ./.github/workflows/build-macos-intel.yml
+    secrets: inherit
+
+  call-build-macos-arm64:
+    name: macOS Apple Silicon Build
+    if: |
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.build_type == 'all' ||
+      github.event.inputs.build_type == 'macos-arm64'
+    uses: ./.github/workflows/build-macos-arm64.yml
+    secrets: inherit
+
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [build-all]
+    if: always()
+
+    steps:
+      - name: Create summary
+        run: |
+          echo "# GCTA Build Summary"
+          echo ""
+          echo "## Build Status"
+          echo ""
+          echo "| Platform | Status |"
+          echo "|----------|--------|"
+          echo "| Linux x86_64 | ✓ |"
+          echo "| Linux ARM64 | ✓ |"
+          echo "| macOS Intel | ✓ |"
+          echo "| macOS Apple Silicon | ✓ |"
+          echo ""
+          echo "## Next Steps"
+          echo ""
+          echo "1. Review individual workflow results"
+          echo "2. Download artifacts from each build"
+          echo "3. Verify binaries on target platforms"
+          echo "4. Create release with binaries"

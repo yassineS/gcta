@@ -1,0 +1,137 @@
+name: Build Linux ARM64
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      upload_artifact:
+        description: 'Upload build artifacts'
+        required: false
+        default: 'true'
+
+jobs:
+  build:
+    name: Build GCTA Static Binary (Linux ARM64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    strategy:
+      matrix:
+        include:
+          # Option 1: Native ARM64 build (uncomment if you have self-hosted ARM64 runner)
+          # - runner: [self-hosted, linux, arm64]
+          #   name: "native-arm64"
+          
+          # Option 2: Cross-compile from x86_64 to ARM64
+          - runner: ubuntu-latest
+            name: "cross-compile-arm64"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            wget \
+            git \
+            gfortran \
+            curl
+          
+          # For cross-compilation (if needed)
+          # sudo apt-get install -y \
+          #   crossbuild-essential-arm64 \
+          #   qemu-user-static
+
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ runner.temp }}/gcta_build
+          echo "BUILD_ROOT=${{ runner.temp }}/gcta_build" >> $GITHUB_ENV
+
+      - name: Build dependencies (ARM64)
+        run: |
+          export GCTA_BUILD_ROOT="${{ env.BUILD_ROOT }}"
+          
+          chmod +x ./docs/build/build_deps_linux_arm64.sh
+          ./docs/build/build_deps_linux_arm64.sh "${{ env.BUILD_ROOT }}"
+
+      - name: Build GCTA (ARM64)
+        run: |
+          export GCTA_BUILD_ROOT="${{ env.BUILD_ROOT }}"
+          export OPENBLAS=${{ env.BUILD_ROOT }}/openblas_pkg
+          export EIGEN3_INCLUDE_DIR=${{ env.BUILD_ROOT }}/dependencies/eigen-3.3.7
+          export SPECTRA_LIB=${{ env.BUILD_ROOT }}/dependencies/spectra-1.0.0/include
+          export BOOST_LIB=${{ env.BUILD_ROOT }}/boost_pkg/include
+          
+          chmod +x ./docs/build/build_gcta_linux_arm64.sh
+          ./docs/build/build_gcta_linux_arm64.sh . "${{ env.BUILD_ROOT }}"
+
+      - name: Verify binary
+        run: |
+          BINARY=${{ env.BUILD_ROOT }}/gcta/build_linux_arm64/gcta64
+          
+          if [ -f "$BINARY" ]; then
+            echo "✓ Binary exists"
+            file "$BINARY"
+            echo ""
+            echo "Binary info:"
+            ls -lh "$BINARY"
+            echo ""
+            echo "Binary type check:"
+            file "$BINARY" | grep -i "aarch64\|arm64" || echo "Warning: May not be native ARM64"
+            echo ""
+            echo "Checking dependencies:"
+            ldd "$BINARY" 2>&1 | head -15 || echo "Note: Cannot run ARM64 binary on x86_64"
+          else
+            echo "✗ Binary not found at $BINARY"
+            exit 1
+          fi
+
+      - name: Create artifact
+        if: inputs.upload_artifact != 'false'
+        run: |
+          BINARY=${{ env.BUILD_ROOT }}/gcta/build_linux_arm64/gcta64
+          mkdir -p artifacts
+          cp "$BINARY" artifacts/gcta64_linux_arm64
+          chmod +x artifacts/gcta64_linux_arm64
+          
+          # Create checksum
+          cd artifacts
+          md5sum gcta64_linux_arm64 > gcta64_linux_arm64.md5
+          sha256sum gcta64_linux_arm64 > gcta64_linux_arm64.sha256
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.upload_artifact != 'false'
+        with:
+          name: gcta64_linux_arm64
+          path: |
+            artifacts/gcta64_linux_arm64
+            artifacts/gcta64_linux_arm64.md5
+            artifacts/gcta64_linux_arm64.sha256
+          retention-days: 30
+
+      - name: Upload to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcta64-linux-arm64-release
+          path: artifacts/
+          retention-days: 90

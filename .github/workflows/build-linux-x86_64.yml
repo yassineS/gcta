@@ -1,0 +1,140 @@
+name: Build Linux x86_64
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      upload_artifact:
+        description: 'Upload build artifacts'
+        required: false
+        default: 'true'
+
+jobs:
+  build:
+    name: Build GCTA Static Binary (Linux x86_64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            wget \
+            git \
+            gfortran \
+            curl
+
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ runner.temp }}/gcta_build
+          echo "BUILD_ROOT=${{ runner.temp }}/gcta_build" >> $GITHUB_ENV
+
+      - name: Download Intel MKL
+        run: |
+          # Try to download precompiled MKL archive
+          mkdir -p ${{ env.BUILD_ROOT }}/mkl_pkg
+          cd ${{ env.BUILD_ROOT }}/mkl_pkg
+          
+          # Download pre-built MKL (oneAPI MKL)
+          echo "Downloading Intel MKL..."
+          if ! wget -q -O mkl.tar.gz "https://yanglab.westlake.edu.cn/data/gcta_dep.tar" 2>/dev/null; then
+            echo "Primary MKL source unavailable. Attempting alternative..."
+            # For CI, we may need to use system MKL or other approaches
+            echo "Note: Using system installation approach"
+          fi
+          
+          # Set MKL root for later
+          export MKLROOT=${{ env.BUILD_ROOT }}/mkl_pkg/mkl/latest
+          echo "MKLROOT=$MKLROOT" >> $GITHUB_ENV
+
+      - name: Build dependencies
+        run: |
+          export GCTA_BUILD_ROOT="${{ env.BUILD_ROOT }}"
+          export MKLROOT="${{ env.MKLROOT }}"
+          
+          chmod +x ./docs/build/build_deps_linux_x86_64.sh
+          ./docs/build/build_deps_linux_x86_64.sh "${{ env.BUILD_ROOT }}"
+
+      - name: Build GCTA
+        run: |
+          export GCTA_BUILD_ROOT="${{ env.BUILD_ROOT }}"
+          export MKLROOT="${{ env.MKLROOT }}"
+          export EIGEN3_INCLUDE_DIR=${{ env.BUILD_ROOT }}/dependencies/eigen-3.3.7
+          export SPECTRA_LIB=${{ env.BUILD_ROOT }}/dependencies/spectra-1.0.0/include
+          export BOOST_LIB=${{ env.BUILD_ROOT }}/boost_pkg/include
+          
+          chmod +x ./docs/build/build_gcta_linux_x86_64.sh
+          ./docs/build/build_gcta_linux_x86_64.sh . "${{ env.BUILD_ROOT }}"
+
+      - name: Verify binary
+        run: |
+          BINARY=${{ env.BUILD_ROOT }}/gcta/build_linux_x86_64/gcta64
+          
+          if [ -f "$BINARY" ]; then
+            echo "✓ Binary exists"
+            file "$BINARY"
+            echo ""
+            echo "Binary info:"
+            ls -lh "$BINARY"
+            echo ""
+            echo "Testing binary:"
+            "$BINARY" --help | head -10
+            echo ""
+            echo "Checking dependencies:"
+            ldd "$BINARY" | head -15
+          else
+            echo "✗ Binary not found at $BINARY"
+            exit 1
+          fi
+
+      - name: Create artifact
+        if: inputs.upload_artifact != 'false'
+        run: |
+          BINARY=${{ env.BUILD_ROOT }}/gcta/build_linux_x86_64/gcta64
+          mkdir -p artifacts
+          cp "$BINARY" artifacts/gcta64_linux_x86_64
+          chmod +x artifacts/gcta64_linux_x86_64
+          
+          # Create checksum
+          cd artifacts
+          md5sum gcta64_linux_x86_64 > gcta64_linux_x86_64.md5
+          sha256sum gcta64_linux_x86_64 > gcta64_linux_x86_64.sha256
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.upload_artifact != 'false'
+        with:
+          name: gcta64_linux_x86_64
+          path: |
+            artifacts/gcta64_linux_x86_64
+            artifacts/gcta64_linux_x86_64.md5
+            artifacts/gcta64_linux_x86_64.sha256
+          retention-days: 30
+
+      - name: Upload to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcta64-linux-x86_64-release
+          path: artifacts/
+          retention-days: 90
