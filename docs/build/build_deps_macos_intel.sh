@@ -47,21 +47,33 @@ brew install gcc boost > /dev/null 2>&1 || true
 mkdir -p "$GCTA_BUILD_ROOT/dependencies"
 cd "$GCTA_BUILD_ROOT/dependencies"
 
-declare -A DEPS=(
-    ["eigen-3.3.7.tar.gz"]="https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz"
-    ["spectra-1.0.0.tar.gz"]="https://github.com/yixuan/spectra/archive/v1.0.0.tar.gz"
-    ["boost_1_75_0.tar.gz"]="https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.gz"
-    ["zlib-1.3.1.tar.gz"]="https://zlib.net/zlib-1.3.1.tar.gz"
-    ["zstd-1.5.0.tar.gz"]="https://github.com/facebook/zstd/releases/download/v1.5.0/zstd-1.5.0.tar.gz"
-    ["gsl-2.7.tar.gz"]="https://ftpmirror.gnu.org/gsl/gsl-2.7.tar.gz"
-    ["sqlite-autoconf-3510200.tar.gz"]="https://www.sqlite.org/2026/sqlite-autoconf-3510200.tar.gz"
+declare -a DEP_FILES=(
+    "eigen-3.3.7.tar.gz"
+    "spectra-1.0.0.tar.gz"
+    "boost_1_75_0.tar.gz"
+    "zlib-1.3.1.tar.gz"
+    "zstd-1.5.0.tar.gz"
+    "gsl-2.7.tar.gz"
+    "sqlite-autoconf-3510200.tar.gz"
+)
+
+declare -a DEP_URLS=(
+    "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz"
+    "https://github.com/yixuan/spectra/archive/v1.0.0.tar.gz"
+    "https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.gz"
+    "https://zlib.net/zlib-1.3.1.tar.gz"
+    "https://github.com/facebook/zstd/releases/download/v1.5.0/zstd-1.5.0.tar.gz"
+    "https://ftpmirror.gnu.org/gsl/gsl-2.7.tar.gz"
+    "https://www.sqlite.org/2026/sqlite-autoconf-3510200.tar.gz"
 )
 
 echo -e "${BLUE}Downloading dependencies...${NC}"
-for file in "${!DEPS[@]}"; do
+for i in "${!DEP_FILES[@]}"; do
+    file="${DEP_FILES[$i]}"
+    url="${DEP_URLS[$i]}"
     if [ ! -f "$file" ]; then
         echo "Downloading $file..."
-        curl -L -o "$file" "${DEPS[$file]}" || {
+        curl -L -o "$file" "$url" || {
             echo "Failed to download $file"
             exit 1
         }
