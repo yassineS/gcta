@@ -47,8 +47,8 @@ export LIBRARY_PATH="$rootdir/gsl_pkg/lib":$LIBRARY_PATH
 export LD_LIBRARY_PATH="$rootdir/gsl_pkg/lib":$LD_LIBRARY_PATH
 
 cd $rootdir/gcta_dep
-tar -zxf zlib-1.2.11.tar.gz
-cd zlib-1.2.11/
+tar -zxf zlib-1.3.1.tar.gz
+cd zlib-1.3.1/
 ./configure  --prefix=$rootdir/zlib_pkg
 make
 make install

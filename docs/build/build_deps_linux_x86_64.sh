@@ -41,7 +41,7 @@ declare -A DEPS=(
     ["eigen-3.3.7.tar.gz"]="https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz"
     ["spectra-1.0.0.tar.gz"]="https://github.com/yixuan/spectra/archive/v1.0.0.tar.gz"
     ["boost_1_75_0.tar.gz"]="https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.gz"
-    ["zlib-1.2.11.tar.gz"]="https://zlib.net/zlib-1.2.11.tar.gz"
+    ["zlib-1.3.1.tar.gz"]="https://zlib.net/zlib-1.3.1.tar.gz"
     ["zstd-1.5.0.tar.gz"]="https://github.com/facebook/zstd/releases/download/v1.5.0/zstd-1.5.0.tar.gz"
     ["gsl-2.7.tar.gz"]="https://ftpmirror.gnu.org/gsl/gsl-2.7.tar.gz"
     ["sqlite-autoconf-3400000.tar.gz"]="https://www.sqlite.org/2023/sqlite-autoconf-3400000.tar.gz"
@@ -101,10 +101,10 @@ cd ..
 
 # Build zlib
 echo -e "${BLUE}Building zlib...${NC}"
-if [ ! -d "zlib-1.2.11" ]; then
-    tar -xzf zlib-1.2.11.tar.gz
+if [ ! -d "zlib-1.3.1" ]; then
+    tar -xzf zlib-1.3.1.tar.gz
 fi
-cd zlib-1.2.11
+cd zlib-1.3.1
 if [ ! -f "$GCTA_BUILD_ROOT/zlib_pkg/lib/libz.a" ]; then
     ./configure --prefix=$GCTA_BUILD_ROOT/zlib_pkg --static > /dev/null
     make > /dev/null
